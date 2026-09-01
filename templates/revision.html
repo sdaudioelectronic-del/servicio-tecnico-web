@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Firma - Orden #{{ numero_orden }}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='estilo.css') }}">
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>Firma del cliente</h1>
+
+    <p class="descripcion">
+        Revise la información de la orden y firme dentro del recuadro.
+    </p>
+
+    <div class="orden">
+
+        <h2>Orden #{{ numero_orden }}</h2>
+
+        <p><strong>Cliente:</strong> {{ cliente }}</p>
+        <p><strong>Teléfono:</strong> {{ telefono }}</p>
+        <p><strong>Equipo:</strong> {{ equipo }}</p>
+        <p><strong>Marca:</strong> {{ marca }}</p>
+        <p><strong>Modelo:</strong> {{ modelo }}</p>
+
+        <p>
+            <strong>Falla reportada:</strong><br>
+            {{ falla }}
+        </p>
+
+        <p>
+            <strong>Accesorios:</strong><br>
+            {{ accesorios }}
+        </p>
+
+    </div>
+
+    <h2>Firma</h2>
+
+    <div class="firma-contenedor">
+        <canvas id="canvas-firma"></canvas>
+    </div>
+
+    <button type="button" onclick="limpiarFirma()">
+        Limpiar firma
+    </button>
+
+    <button type="button" onclick="guardarFirma()">
+        Firmar y finalizar
+    </button>
+
+    <form id="form-firma"
+          action="/firmar/{{ numero_orden }}"
+          method="POST">
+
+        <input type="hidden"
+               name="firma"
+               id="firma">
+
+    </form>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas-firma");
+const ctx = canvas.getContext("2d");
+
+canvas.width = canvas.offsetWidth;
+canvas.height = 250;
+
+let dibujando = false;
+
+function obtenerPosicion(e) {
+
+    const rect = canvas.getBoundingClientRect();
+
+    if (e.touches) {
+
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+
+    }
+
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+
+function comenzar(e) {
+
+    e.preventDefault();
+
+    dibujando = true;
+
+    const posicion = obtenerPosicion(e);
+
+    ctx.beginPath();
+
+    ctx.moveTo(posicion.x, posicion.y);
+}
+
+
+function dibujar(e) {
+
+    if (!dibujando) return;
+
+    e.preventDefault();
+
+    const posicion = obtenerPosicion(e);
+
+    ctx.lineTo(posicion.x, posicion.y);
+
+    ctx.stroke();
+}
+
+
+function terminar() {
+
+    dibujando = false;
+
+    ctx.closePath();
+}
+
+
+canvas.addEventListener("mousedown", comenzar);
+canvas.addEventListener("mousemove", dibujar);
+canvas.addEventListener("mouseup", terminar);
+
+canvas.addEventListener("touchstart", comenzar);
+canvas.addEventListener("touchmove", dibujar);
+canvas.addEventListener("touchend", terminar);
+
+
+function limpiarFirma() {
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+}
+
+
+function guardarFirma() {
+
+    const imagen = canvas.toDataURL("image/png");
+
+    document.getElementById("firma").value = imagen;
+
+    document.getElementById("form-firma").submit();
+}
+
+</script>
+
+</body>
+
+</html> 

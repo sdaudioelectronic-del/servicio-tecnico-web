@@ -1,0 +1,6 @@
+servicio.db
+*.db
+__pycache__/
+firmas/
+pdf/
+.env
