@@ -14,7 +14,7 @@ NOMBRE_BASE_DATOS = "servicio.db"
 
 
 def crear_base_datos():
-
+    print(">>> CREANDO BASE DE DATOS:", NOMBRE_BASE_DATOS)
     conexion = sqlite3.connect(NOMBRE_BASE_DATOS)
 
     conexion.execute("""
