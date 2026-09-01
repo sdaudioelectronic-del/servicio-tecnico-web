@@ -35,7 +35,7 @@ def crear_base_datos():
 
     conexion.commit()
     conexion.close()
-
+crear_base_datos()
 
 @app.route("/")
 def formulario():
