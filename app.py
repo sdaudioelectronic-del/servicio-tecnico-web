@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, send_file, redirect
+from reportlab.lib.utils import ImageReader
 import sqlite3
 import base64
 import os
 import secrets
+
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -184,183 +186,338 @@ def firmar(numero_orden):
 
     pdf = canvas.Canvas(
         ruta_pdf,
-        pagesize=A4
+      pagesize=A4
     )
 
     ancho, alto = A4
 
-    # Título
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        20
-    )
-
-    pdf.drawString(
-        50,
-        alto - 60,
-        "ORDEN DE SERVICIO TECNICO"
-    )
-
-    # Número de orden
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        13
-    )
-
-    pdf.drawString(
-        50,
-        alto - 95,
-        f"Orden #{numero_orden}"
-    )
-
-    # Cliente
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        12
-    )
-
-    pdf.drawString(
-        50,
-        alto - 140,
-        "DATOS DEL CLIENTE"
-    )
-
-    pdf.setFont(
-        "Helvetica",
-        11
-    )
-
-    pdf.drawString(
-        50,
-        alto - 165,
-        f"Cliente: {orden['cliente']}"
-    )
-
-    pdf.drawString(
-        50,
-        alto - 185,
-        f"Telefono: {orden['telefono']}"
-    )
-
-    # Equipo
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        12
-    )
-
-    pdf.drawString(
-        50,
-        alto - 225,
-        "DATOS DEL EQUIPO"
-    )
-
-    pdf.setFont(
-        "Helvetica",
-        11
-    )
-
-    pdf.drawString(
-        50,
-        alto - 250,
-        f"Equipo: {orden['equipo']}"
-    )
-
-    pdf.drawString(
-        50,
-        alto - 270,
-        f"Marca: {orden['marca'] or ''}"
-    )
-
-    pdf.drawString(
-        50,
-        alto - 290,
-        f"Modelo: {orden['modelo'] or ''}"
-    )
-
-    # Falla
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        12
-    )
-
-    pdf.drawString(
-        50,
-        alto - 330,
-        "FALLA REPORTADA"
-    )
-
-    pdf.setFont(
-        "Helvetica",
-        11
-    )
-
-    pdf.drawString(
-        50,
-        alto - 355,
-        orden["falla"] or "No especificada"
-    )
-
-    # Accesorios
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        12
-    )
-
-    pdf.drawString(
-        50,
-        alto - 395,
-        "ACCESORIOS ENTREGADOS"
-    )
-
-    pdf.setFont(
-        "Helvetica",
-        11
-    )
-
-    pdf.drawString(
-        50,
-        alto - 420,
-        orden["accesorios"] or "Ninguno"
-    )
-
-    # Firma
-
-    pdf.setFont(
-        "Helvetica-Bold",
-        12
-    )
-
-    pdf.drawString(
-        50,
-        alto - 470,
-        "FIRMA DEL CLIENTE"
+    ruta_logo = os.path.join(
+        "static",
+        "logo.png"
     )
 
     pdf.drawImage(
-        ImageReader(ruta_firma),
-        50,
-        alto - 620,
-        width=250,
-        height=120,
+        ImageReader(ruta_logo),
+        20,
+        alto - 80,
+        width=120,
+        height=50,
         preserveAspectRatio=True,
         mask="auto"
     )
 
-    pdf.setFont(
-        "Helvetica",
-        9
+# =========================================================
+# ENCABEZADO
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawCentredString(
+        ancho / 2,
+        alto - 55,
+        "ORDEN DE SERVICIO TÉCNICO"
     )
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawCentredString(
+        ancho / 2,
+        alto - 72,
+        "Comprobante de recepción del equipo"
+    )
+
+# Línea separadora
+
+    pdf.line(
+        40,
+        alto - 90,
+        ancho - 40,
+        alto - 90
+    )
+
+# =========================================================
+# INFORMACIÓN DE LA ORDEN
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 120,
+        f"ORDEN #{numero_orden}"
+    )
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawRightString(
+        ancho - 50,
+        alto - 120,
+        f"Fecha: {orden['fecha'] if 'fecha' in orden.keys() else ''}"
+    )
+
+# =========================================================
+# DATOS DEL CLIENTE
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 155,
+        "DATOS DEL CLIENTE"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 220,
+        ancho - 90,
+        45,
+        6
+    )
+
+    pdf.setFont("Helvetica-Bold", 10)
+
+    pdf.drawString(
+        60,
+        alto - 190,
+        "Cliente:"
+    )
+
+    pdf.drawString(
+        60,
+        alto - 210,
+        "Dirección:"
+    )
+
+
+    pdf.drawString(
+        320,
+        alto - 190,
+        "Teléfono:"
+    )
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawString(
+        105,
+        alto - 190,
+        orden["cliente"] or ""
+    )
+
+    pdf.drawString(
+        375,
+        alto - 190,
+        orden["telefono"] or ""
+    )
+
+# =========================================================
+# DATOS DEL EQUIPO
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 245,
+        "EQUIPO RECIBIDO"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 330,
+        ancho - 90,
+        60,
+        6
+    )
+
+    pdf.setFont("Helvetica-Bold", 10)
+
+    pdf.drawString(
+        60,
+        alto - 300,
+        "Equipo:"
+    )
+
+    pdf.drawString(
+        320,
+        alto - 300,
+        "Marca:"
+    )
+
+    pdf.drawString(
+        60,
+        alto - 315,
+        "Modelo:"
+    )
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawString(
+        110,
+        alto - 300,
+        orden["equipo"] or ""
+    )
+
+    pdf.drawString(
+        350,
+        alto - 300,
+        orden["marca"] or ""
+    )
+
+    pdf.drawString(
+        110,
+        alto - 315,
+        orden["modelo"] or ""
+    )
+
+# =========================================================
+# FALLA REPORTADA
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 355,
+        "FALLA REPORTADA"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 430,
+        ancho - 90,
+        60,
+        6
+    )
+
+    pdf.setFont("Helvetica", 10)
+
+    falla = orden["falla"] or "No especificada"
+
+    pdf.drawString(
+        60,
+        alto - 395,
+        falla
+    )
+    
+    
+    # =========================================================
+        # =========================================================
+
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 460,
+        "OBSERVACIONES"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 535,
+        ancho - 90,
+        60,
+        6
+    )
+
+    pdf.setFont("Helvetica", 10)
+
+    
+
+    
+# =========================================================
+# ACCESORIOS
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    pdf.drawString(
+        50,
+        alto - 560,
+        "ACCESORIOS ENTREGADOS"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 620,
+        ancho - 90,
+        50,
+        6
+    )#Espacio de Campo
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawString(
+        60,
+        alto - 590,
+        orden["accesorios"] or "Ninguno"
+    )
+
+# =========================================================
+# ESTADO
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
+
+    
+
+
+# =========================================================
+# FIRMA
+# =========================================================
+
+    pdf.setFont("Helvetica-Bold", 12)
 
     pdf.drawString(
         50,
         alto - 640,
+        "FIRMA DEL CLIENTE"
+    )
+
+    pdf.roundRect(
+        45,
+        alto - 775,
+        ancho - 90,
+        120,
+        6
+    )
+
+# Firma
+
+    pdf.drawImage(
+     ImageReader(ruta_firma),
+        80,
+        alto - 750,
+        width=220,
+        height=90,
+        preserveAspectRatio=True,
+        mask="auto"
+    )
+
+    pdf.setFont("Helvetica", 8)
+
+    pdf.drawCentredString(
+        ancho / 2,
+        alto - 765,
         "Firma digital del cliente"
+    )
+
+# =========================================================
+# PIE DE PÁGINA
+# =========================================================
+
+    pdf.line(
+        40,
+        45,
+        ancho - 40,
+        45
+    )
+
+    pdf.setFont("Helvetica", 8)
+
+    pdf.drawCentredString(
+        ancho / 2,
+        30,
+        "Conserve este documento como comprobante de recepción del equipo."
     )
 
     pdf.save()
