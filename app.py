@@ -1,5 +1,11 @@
 from flask import Flask, render_template, request, send_file, redirect
 from reportlab.lib.utils import ImageReader
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.enums import TA_RIGHT
 import sqlite3
 import base64
 import os
@@ -12,7 +18,20 @@ from reportlab.lib.utils import ImageReader
 
 app = Flask(__name__)
 
+
 NOMBRE_BASE_DATOS = "servicio.db"
+
+fecha_actual = datetime.now()
+
+fecha = fecha_actual.strftime("%d/%m/%Y")
+hora = fecha_actual.strftime("%I:%M %p")
+
+fecha_actual = datetime.now(
+    ZoneInfo("America/Bogota")
+)
+
+fecha = fecha_actual.strftime("%d/%m/%Y")
+hora = fecha_actual.strftime("%I:%M %p")
 
 
 def crear_base_datos():
@@ -24,14 +43,18 @@ def crear_base_datos():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente TEXT NOT NULL,
             telefono TEXT NOT NULL,
+            direccion TEXT NOT NULL,
             equipo TEXT NOT NULL,
             marca TEXT,
             modelo TEXT,
             falla TEXT,
+            observacion TEXT,
             accesorios TEXT,
             firma TEXT,
             estado TEXT DEFAULT 'Pendiente de firma',
             codigo TEXT
+            mano_obra REAL DEFAULT 0,
+            repuestos REAL DEFAULT 0
         )
     """)
 
@@ -50,10 +73,12 @@ def guardar():
 
     cliente = request.form["cliente"]
     telefono = request.form["telefono"]
+    direccion = request.form["direccion"]
     equipo = request.form["equipo"]
     marca = request.form["marca"]
     modelo = request.form["modelo"]
     falla = request.form["falla"]
+    observacion = request.form["observacion"]
     accesorios = request.form["accesorios"]
 
     # Crear código único para la orden
@@ -68,21 +93,25 @@ def guardar():
         (
             cliente,
             telefono,
+            direccion,
             equipo,
             marca,
             modelo,
             falla,
+            observacion,
             accesorios,
             codigo
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         cliente,
         telefono,
+        direccion,
         equipo,
         marca,
         modelo,
         falla,
+        observacion,
         accesorios,
         codigo
     ))
@@ -97,11 +126,13 @@ def guardar():
         "revision.html",
         numero_orden=numero_orden,
         cliente=cliente,
+        direccion=direccion,
         telefono=telefono,
         equipo=equipo,
         marca=marca,
         modelo=modelo,
         falla=falla,
+        observacion=observacion,
         accesorios=accesorios,
         codigo=codigo
     )
@@ -115,6 +146,12 @@ def firmar(numero_orden):
     if not firma:
 
         return "No se recibió la firma."
+
+    mano_obra = float(request.form.get("mano_obra", 0) or 0)
+    repuestos = float(request.form.get("repuestos", 0) or 0)
+
+    total = mano_obra + repuestos
+
 
     firma = firma.split(",")[1]
 
@@ -146,11 +183,15 @@ def firmar(numero_orden):
     conexion.execute("""
         UPDATE ordenes
         SET firma = ?,
-            estado = ?
+            estado = ?,
+            mano_obra = ?,
+            repuestos = ?
         WHERE id = ?
-    """, (
+    """,  (
         nombre_firma,
         "Firmada",
+        mano_obra,
+        repuestos,
         numero_orden
     ))
 
@@ -175,6 +216,12 @@ def firmar(numero_orden):
 
         return "Orden no encontrada."
 
+    mano_obra = orden["mano_obra"] or 0
+    repuestos = orden["repuestos"] or 0
+
+    total = mano_obra + repuestos
+    # Crear PDF
+
     # Crear PDF
 
     nombre_pdf = f"orden_{numero_orden}.pdf"
@@ -186,10 +233,47 @@ def firmar(numero_orden):
 
     pdf = canvas.Canvas(
         ruta_pdf,
-      pagesize=A4
+        pagesize=A4
     )
 
     ancho, alto = A4
+
+
+# Fecha y hora
+
+    fecha_actual = datetime.now(
+        ZoneInfo("America/Bogota")
+    )
+
+    fecha = fecha_actual.strftime("%d/%m/%Y")
+    hora = fecha_actual.strftime("%I:%M %p")
+
+
+# Fecha en el PDF
+
+    pdf.setFont(
+        "Helvetica",
+        10
+    )
+
+    pdf.setFont("Helvetica-Bold", 10)
+
+    pdf.drawString(
+        450,
+        alto - 110,
+        f"Fecha: {fecha}"
+    )
+
+    pdf.setFont("Helvetica-Bold", 10)
+
+    pdf.drawString(
+        450,
+        alto - 125,
+        f"Hora: {hora}"
+    )
+
+
+# Logo
 
     ruta_logo = os.path.join(
         "static",
@@ -205,6 +289,7 @@ def firmar(numero_orden):
         preserveAspectRatio=True,
         mask="auto"
     )
+
 
 # =========================================================
 # ENCABEZADO
@@ -247,11 +332,6 @@ def firmar(numero_orden):
 
     pdf.setFont("Helvetica", 10)
 
-    pdf.drawRightString(
-        ancho - 50,
-        alto - 120,
-        f"Fecha: {orden['fecha'] if 'fecha' in orden.keys() else ''}"
-    )
 
 # =========================================================
 # DATOS DEL CLIENTE
@@ -308,6 +388,12 @@ def firmar(numero_orden):
         orden["telefono"] or ""
     )
 
+    pdf.drawString(
+        115,
+        alto - 210,
+        orden["direccion"] or ""
+    )
+
 # =========================================================
 # DATOS DEL EQUIPO
 # =========================================================
@@ -332,13 +418,13 @@ def firmar(numero_orden):
 
     pdf.drawString(
         60,
-        alto - 300,
+        alto - 290,
         "Equipo:"
     )
 
     pdf.drawString(
         320,
-        alto - 300,
+        alto - 290,
         "Marca:"
     )
 
@@ -352,13 +438,13 @@ def firmar(numero_orden):
 
     pdf.drawString(
         110,
-        alto - 300,
+        alto - 290,
         orden["equipo"] or ""
     )
 
     pdf.drawString(
-        350,
-        alto - 300,
+        365,
+        alto - 290,
         orden["marca"] or ""
     )
 
@@ -368,7 +454,7 @@ def firmar(numero_orden):
         orden["modelo"] or ""
     )
 
-# =========================================================
+    # =========================================================
 # FALLA REPORTADA
 # =========================================================
 
@@ -383,45 +469,116 @@ def firmar(numero_orden):
     pdf.roundRect(
         45,
         alto - 430,
-        ancho - 90,
+        ancho - 350,
         60,
         6
     )
 
-    pdf.setFont("Helvetica", 10)
-
     falla = orden["falla"] or "No especificada"
 
-    pdf.drawString(
+
+# Estilo del texto
+
+    estilo_falla = ParagraphStyle(
+        "Falla",
+        fontName="Helvetica",
+        fontSize=10,
+        leading=13,
+        alignment=TA_LEFT
+    )
+
+
+# Crear párrafo
+
+    parrafo_falla = Paragraph(
+        falla,
+        estilo_falla
+    )
+
+
+# Calcular tamaño del texto
+
+    ancho_falla = ancho - 370
+    alto_falla = 50
+
+    parrafo_falla.wrap(
+        ancho_falla,
+        alto_falla
+    )
+
+
+# Dibujar dentro del recuadro
+
+    parrafo_falla.drawOn(
+        pdf,
         60,
-        alto - 395,
-        falla
+        alto - 420
     )
     
-    
     # =========================================================
-        # =========================================================
+    # =========================================================
 
+    # =========================================================
+# OBSERVACIONES 
+# =========================================================
 
     pdf.setFont("Helvetica-Bold", 12)
 
     pdf.drawString(
-        50,
-        alto - 460,
+        345,
+        alto - 355,
         "OBSERVACIONES"
     )
 
     pdf.roundRect(
-        45,
-        alto - 535,
-        ancho - 90,
+        320,
+        alto - 430,
+        ancho - 350,
         60,
         6
     )
 
-    pdf.setFont("Helvetica", 10)
+    observacion = orden["observacion"] or "Sin observaciones"
 
-    
+
+# Estilo del texto
+
+    estilo_observacion = ParagraphStyle(
+        "observacion",
+        fontName="Helvetica",
+        fontSize=10,
+        leading=13,
+        alignment=TA_LEFT
+    )
+
+
+# Crear párrafo
+
+    parrafo_observacion = Paragraph(
+        observacion,
+        estilo_observacion
+    )
+
+
+# Calcular tamaño del texto
+
+    ancho_observacion = ancho - 370
+    alto_observacion = 50
+
+    parrafo_observacion.wrap(
+        ancho_observacion,
+        alto_observacion
+    )
+
+
+# Dibujar dentro del recuadro
+
+    parrafo_observacion.drawOn(
+        pdf,
+        325,
+        alto - 420
+    )
+
 
     
 # =========================================================
@@ -432,13 +589,13 @@ def firmar(numero_orden):
 
     pdf.drawString(
         50,
-        alto - 560,
+        alto - 455,
         "ACCESORIOS ENTREGADOS"
     )
 
     pdf.roundRect(
         45,
-        alto - 620,
+        alto - 520,
         ancho - 90,
         50,
         6
@@ -448,16 +605,64 @@ def firmar(numero_orden):
 
     pdf.drawString(
         60,
-        alto - 590,
+        alto - 500,
         orden["accesorios"] or "Ninguno"
     )
 
-# =========================================================
-# ESTADO
-# =========================================================
 
-    pdf.setFont("Helvetica-Bold", 12)
+    # ==============================
+    # DESGLOSE DE COSTOS
+    # ==============================
 
+    pdf.setFont(
+        "Helvetica-Bold",
+        12
+    )
+
+    pdf.drawString(
+        50,
+        alto - 580,
+        "DESGLOSE DE COSTOS"
+    )
+
+    pdf.setFont(
+        "Helvetica",
+        11
+    )
+
+    pdf.drawString(
+        70,
+        alto - 620,
+        f"Mano de obra:    $ {mano_obra:,.0f}"
+    )
+
+    pdf.drawString(
+        75,
+        alto - 640,
+        f"Repuestos:       $ {repuestos:,.0f}"
+    )
+
+    # Línea separadora
+
+    pdf.line(
+        50,
+        alto - 590,
+        300,
+        alto - 590
+    )
+
+    # Total
+
+    pdf.setFont(
+        "Helvetica-Bold",
+        12
+    )
+
+    pdf.drawString(
+        70,
+        alto - 668,
+        f"TOTAL:           $ {total:,.0f}"
+    )
     
 
 
@@ -465,41 +670,44 @@ def firmar(numero_orden):
 # FIRMA
 # =========================================================
 
-    pdf.setFont("Helvetica-Bold", 12)
-
-    pdf.drawString(
-        50,
-        alto - 640,
-        "FIRMA DEL CLIENTE"
-    )
-
-    pdf.roundRect(
-        45,
-        alto - 775,
-        ancho - 90,
-        120,
-        6
-    )
-
-# Firma
+    
 
     pdf.drawImage(
      ImageReader(ruta_firma),
-        80,
-        alto - 750,
+        5,
+        alto - 785,
         width=220,
         height=90,
         preserveAspectRatio=True,
         mask="auto"
     )
 
-    pdf.setFont("Helvetica", 8)
 
-    pdf.drawCentredString(
-        ancho / 2,
-        alto - 765,
-        "Firma digital del cliente"
+    # Firma del técnico
+    pdf.drawImage(
+        ImageReader("static/firma_tecnico.png"),
+        320,
+        alto - 795,
+        width=180,
+        height=80,
+        preserveAspectRatio=True,
+        mask="auto"
+    )       
+
+    pdf.setFont("Helvetica", 10)
+
+    pdf.drawString(
+        90,
+        alto - 790,
+        "Firma del cliente"
+    )   
+
+    pdf.drawString(
+        370,
+        alto - 790,
+        "Firma del técnico"
     )
+
 
 # =========================================================
 # PIE DE PÁGINA
@@ -675,16 +883,18 @@ def generar_enlace():
         (
             cliente,
             telefono,
+            direccion,
             equipo,
             marca,
             modelo,
             falla,
+            observacion,
             accesorios,
             firma,
             estado,
             codigo
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         "Pendiente",
         telefono,
