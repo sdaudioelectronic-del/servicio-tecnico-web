@@ -67,10 +67,15 @@ def formulario():
 
     return render_template("formulario.html")
 
+    ##
 
 @app.route("/guardar", methods=["POST"])
 def guardar():
 
+    # Código del enlace generado por el administrador
+    codigo_enlace = request.form["codigo"]
+
+    # Datos enviados por el cliente
     cliente = request.form["cliente"]
     telefono = request.form["telefono"]
     direccion = request.form["direccion"]
@@ -81,10 +86,27 @@ def guardar():
     observacion = request.form["observacion"]
     accesorios = request.form["accesorios"]
 
-    # Crear código único para la orden
-    codigo = secrets.token_urlsafe(6)
-
     conexion = sqlite3.connect(NOMBRE_BASE_DATOS)
+    conexion.row_factory = sqlite3.Row
+
+    # Buscar el enlace original
+    orden_enlace = conexion.execute(
+        "SELECT * FROM ordenes WHERE codigo = ?",
+        (codigo_enlace,)
+    ).fetchone()
+
+    # Comprobar que el código exista
+    if not orden_enlace:
+        conexion.close()
+        return "Enlace no válido o expirado."
+
+    # Comprobar que todavía no haya sido utilizado
+    if orden_enlace["estado"] != "Pendiente de registro":
+        conexion.close()
+        return "Este enlace ya fue utilizado."
+
+    # Crear un código nuevo para la orden
+    codigo = secrets.token_urlsafe(6)
 
     cursor = conexion.cursor()
 
@@ -116,10 +138,19 @@ def guardar():
         codigo
     ))
 
-    conexion.commit()
-
     numero_orden = cursor.lastrowid
 
+    # Marcar el enlace original como utilizado
+    conexion.execute(
+        """
+        UPDATE ordenes
+        SET estado = ?
+        WHERE codigo = ?
+        """,
+        ("Utilizado", codigo_enlace)
+    )
+
+    conexion.commit()
     conexion.close()
 
     return render_template(
@@ -841,6 +872,8 @@ def ver_pdf(numero_orden):
 
     return send_file(ruta_pdf)
 
+
+    ##
 @app.route("/registro/<codigo>")
 def registro(codigo):
 
@@ -857,6 +890,10 @@ def registro(codigo):
     if not orden:
         return "Enlace no válido o expirado."
 
+    # Verificar si el enlace ya fue utilizado
+    if orden["estado"] != "Pendiente de registro":
+        return "Este enlace ya fue utilizado."
+
     return render_template(
         "formulario.html",
         codigo=codigo
@@ -869,11 +906,14 @@ def admin():
         "admin.html"
     )
 
+##
+
 @app.route("/generar-enlace", methods=["POST"])
 def generar_enlace():
 
     telefono = request.form["telefono"]
 
+    # Crear código único para el enlace
     codigo = secrets.token_urlsafe(6)
 
     conexion = sqlite3.connect(NOMBRE_BASE_DATOS)
@@ -904,21 +944,21 @@ def generar_enlace():
         "",
         "",
         "",
+        "",
+        "",
         "Pendiente de registro",
         codigo
     ))
 
     conexion.commit()
-
     conexion.close()
 
-    enlace = f"https://{request.host}/registro/{codigo}"
+    enlace = f"{request.scheme}://{request.host}/registro/{codigo}"
 
     return render_template(
         "admin.html",
         enlace=enlace
     )
-
 
 if __name__ == "__main__":
 
