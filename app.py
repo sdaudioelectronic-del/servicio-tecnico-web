@@ -36,6 +36,7 @@ hora = fecha_actual.strftime("%I:%M %p")
 
 def crear_base_datos():
     print(">>> CREANDO BASE DE DATOS:", NOMBRE_BASE_DATOS)
+
     conexion = sqlite3.connect(NOMBRE_BASE_DATOS)
 
     conexion.execute("""
@@ -52,14 +53,38 @@ def crear_base_datos():
             accesorios TEXT,
             firma TEXT,
             estado TEXT DEFAULT 'Pendiente de firma',
-            codigo TEXT
+            codigo TEXT,
             mano_obra REAL DEFAULT 0,
             repuestos REAL DEFAULT 0
         )
     """)
 
+    # Verificar las columnas existentes
+    columnas = conexion.execute(
+        "PRAGMA table_info(ordenes)"
+    ).fetchall()
+
+    nombres_columnas = [columna[1] for columna in columnas]
+
+    # Agregar mano_obra si no existe
+    if "mano_obra" not in nombres_columnas:
+        conexion.execute(
+            "ALTER TABLE ordenes ADD COLUMN mano_obra REAL DEFAULT 0"
+        )
+        print(">>> Columna mano_obra agregada")
+
+    # Agregar repuestos si no existe
+    if "repuestos" not in nombres_columnas:
+        conexion.execute(
+            "ALTER TABLE ordenes ADD COLUMN repuestos REAL DEFAULT 0"
+        )
+        print(">>> Columna repuestos agregada")
+
     conexion.commit()
     conexion.close()
+
+    print(">>> BASE DE DATOS LISTA")
+    
 crear_base_datos()
 
 @app.route("/")

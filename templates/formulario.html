@@ -17,38 +17,45 @@
             Complete los siguientes datos para registrar su equipo.
         </p>
 
-        <form action="/guardar" method="POST">
+        <form action="/guardar" method="POST" autocomplete="off">
 
             <input type="hidden" name="codigo" value="{{ codigo }}">
 
             <h2>Datos del cliente</h2>
 
             <label>Nombre completo</label>
-            <input type="text" name="cliente" placeholder="Ingrese su nombre" required>
+            <input type="text" name="cliente" placeholder="Ingrese su nombre" autocomplete="off" required>
 
             <label>Número de teléfono</label>
-            <input type="tel" name="telefono" placeholder="Ingrese su teléfono" required>
+            <input type="tel" name="telefono" placeholder="Ingrese su telefono" autocomplete="off" required>
 
             <label>Dirección</label>
-            <input type="text" name="direccion" placeholder="Ingrese su dirección" required>
+            <input type="text" name="direccion" placeholder="Ingrese su dirección" autocomplete="off" required>
 
             <label>Tipo de equipo</label>
-            <input type="text" name="equipo" placeholder="Ej: amplificador, cabina" required>
+            <input type="text" name="equipo" placeholder="Ej: amplificador, cabina" autocomplete="off" required>
 
             <label>Marca</label>
-            <input type="text" name="marca" placeholder="Ingrese la marca">
+            <input type="text" name="marca" placeholder="Ingrese la marca" autocomplete="off">
+
+            
 
             <label>Modelo</label>
-            <input type="text" name="modelo" placeholder="Ingrese el modelo">
+            <input type="text" name="modelo" placeholder="Ingrese el modelo" autocomplete="off">
 
             <label>Falla reportada</label>
             <textarea name="falla" placeholder="Describa la falla del equipo"></textarea>
+            <textarea name="falla" placeholder="Describa la falla del equipo" autocomplete="off"></textarea>
+
 
             <label>Observación</label>
             <textarea name="observacion" placeholder="Diagnostico y procedimiento"></textarea>
+            <textarea name="observacion" placeholder="Diagnostico y procedimiento" autocomplete="off"></textarea>
 
             <label>Accesorios entregados</label>
             <textarea name="accesorios" placeholder="Ej: Control remoto, cable de corriente, etc."></textarea>
+            <textarea name="accesorios" placeholder="Ej: Control remoto, cable de corriente, etc." autocomplete="off"></textarea>
+
 
             <button type="submit">
             Continuar
