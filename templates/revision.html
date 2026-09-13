@@ -83,6 +83,14 @@
         >
     </div>
 
+    <label>Garantía del servicio (meses)</label>
+        <input
+            type="number"
+            name="garantia"
+            min="0"
+            placeholder="Ej: 3"
+        >
+
     <h2>Firma</h2>
 
     <div class="firma-contenedor">
@@ -112,6 +120,10 @@
         <input type="hidden"
            name="repuestos"
            id="form-repuestos">
+
+        <input type="hidden"
+            name="garantia"
+            id="form-garantia">
 
     </form>
 
@@ -214,6 +226,9 @@ function guardarFirma() {
 
     document.getElementById("form-repuestos").value =
         document.getElementById("repuestos").value;
+
+    document.getElementById("form-garantia").value =
+        document.querySelector('[name="garantia"]').value;
 
     document.getElementById("form-firma").submit();
 }

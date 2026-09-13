@@ -55,7 +55,8 @@ def crear_base_datos():
             estado TEXT DEFAULT 'Pendiente de firma',
             codigo TEXT,
             mano_obra REAL DEFAULT 0,
-            repuestos REAL DEFAULT 0
+            repuestos REAL DEFAULT 0,
+            garantia INTEGER DEFAULT 0
         )
     """)
 
@@ -79,6 +80,12 @@ def crear_base_datos():
             "ALTER TABLE ordenes ADD COLUMN repuestos REAL DEFAULT 0"
         )
         print(">>> Columna repuestos agregada")
+
+    if "garantia" not in nombres_columnas:
+        conexion.execute(
+            "ALTER TABLE ordenes ADD COLUMN garantia INTEGER DEFAULT 0"
+        )
+        print(">>> Columna garantia agregada")    
 
     conexion.commit()
     conexion.close()
@@ -205,6 +212,9 @@ def firmar(numero_orden):
 
     mano_obra = float(request.form.get("mano_obra", 0) or 0)
     repuestos = float(request.form.get("repuestos", 0) or 0)
+    garantia = int(request.form.get("garantia") or 0)
+
+
 
     total = mano_obra + repuestos
 
@@ -241,13 +251,15 @@ def firmar(numero_orden):
         SET firma = ?,
             estado = ?,
             mano_obra = ?,
-            repuestos = ?
+            repuestos = ?,
+            garantia = ?
         WHERE id = ?
     """,  (
         nombre_firma,
         "Firmada",
         mano_obra,
         repuestos,
+        garantia,
         numero_orden
     ))
 
@@ -274,6 +286,7 @@ def firmar(numero_orden):
 
     mano_obra = orden["mano_obra"] or 0
     repuestos = orden["repuestos"] or 0
+    garantia = orden["garantia"] or 0
 
     total = mano_obra + repuestos
     # Crear PDF
@@ -662,7 +675,7 @@ def firmar(numero_orden):
     pdf.drawString(
         60,
         alto - 500,
-        orden["accesorios"] or "Ninguno"
+        orden["accesorios"] or "Sin accesorio"
     )
 
 
@@ -781,7 +794,7 @@ def firmar(numero_orden):
     pdf.drawCentredString(
         ancho / 2,
         30,
-        "Conserve este documento como comprobante de recepción del equipo."
+        f"Conserve este documento para hacer válida la garantía de {garantia} meses del servicio realizado."
     )
 
     pdf.save()
