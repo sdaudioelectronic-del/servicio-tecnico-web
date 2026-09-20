@@ -908,7 +908,12 @@ def ver_pdf(numero_orden):
 
         return "PDF no encontrado."
 
-    return send_file(ruta_pdf)
+    return send_file(
+        ruta_pdf,
+        mimetype="application/pdf",
+        as_attachment=False,
+        max_age=0
+    )
 
 
     ##
