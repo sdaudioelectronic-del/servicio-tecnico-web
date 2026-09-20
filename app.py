@@ -881,7 +881,7 @@ def firmar(numero_orden):
             </div>
 
             <a class="boton"
-               href="/pdf/{numero_orden}"
+               href="/pdf/{numero_orden}?v={numero_orden}"
                target="_blank">
 
                 Ver comprobante PDF
