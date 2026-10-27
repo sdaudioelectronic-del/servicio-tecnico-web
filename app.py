@@ -346,7 +346,7 @@ def firmar(numero_orden):
 
     ruta_logo = os.path.join(
         "static",
-        "logo.png"
+        "Logoo.jpeg"
     )
 
     pdf.drawImage(
@@ -753,7 +753,7 @@ def firmar(numero_orden):
 
     # Firma del técnico
     pdf.drawImage(
-        ImageReader("static/firma_tecnico.png"),
+        ImageReader("static/FIRMA.jpeg"),
         320,
         alto - 795,
         width=180,
