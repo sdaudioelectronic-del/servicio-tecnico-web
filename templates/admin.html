@@ -1,177 +1,37 @@
-<!DOCTYPE html>
-<html lang="es">
+{% extends "base.html" %}
+{% block titulo %}Panel de administración{% endblock %}
+{% block subtitulo %}Panel de administración{% endblock %}
+{% block contenido %}
+<h1>Nueva orden</h1>
+<p class="sub">Genera un enlace único para que el cliente registre su equipo desde su celular.</p>
 
-<head>
-    <meta charset="UTF-8">
+<form action="/generar-enlace" method="POST" class="card">
+  <h2>Datos del cliente</h2>
+  <label for="telefono">Teléfono del cliente</label>
+  <input id="telefono" name="telefono" type="tel" inputmode="tel" placeholder="Ej: 300 123 4567" required>
+  <div style="height:16px"></div>
+  <button class="btn" type="submit">Generar enlace</button>
+</form>
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Generar enlace</title>
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f2f4f7;
-            padding: 30px;
-        }
-
-        .contenedor {
-            max-width: 600px;
-            margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .descripcion {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        input {
-            width: 100%;
-            padding: 13px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            font-size: 17px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .resultado {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f3f4f6;
-            border-radius: 10px;
-        }
-
-        .enlace {
-            word-break: break-all;
-            background: white;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 7px;
-            margin: 15px 0;
-        }
-
-        .copiar {
-            background: #16a34a;
-        }
-
-        .copiar:hover {
-            background: #15803d;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="contenedor">
-
-    <h1>Generar enlace</h1>
-
-    <p class="descripcion">
-        Genere un enlace para que el cliente registre
-        los datos de su equipo.
-    </p>
-
-    <form action="/generar-enlace" method="POST">
-
-        <label>
-            Número de teléfono del cliente
-        </label>
-
-        
-
-        <input type="tel" name="telefono" placeholder="Ej: 3001234567" autocomplete="off" required>
-    
-
-        <button type="submit">
-            Generar enlace
-        </button>
-
-    </form>
-
-
-    {% if enlace %}
-
-    <div class="resultado">
-
-        <strong>
-            Enlace generado:
-        </strong>
-
-        <div class="enlace" id="enlace">
-            {{ enlace }}
-        </div>
-
-        <button
-            type="button"
-            class="copiar"
-            onclick="copiarEnlace()">
-
-            Copiar enlace
-
-        </button>
-
-    </div>
-
-    {% endif %}
-
-</div>
-
-
+{% if enlace %}
+<section class="card">
+  <span class="insignia">Enlace listo</span>
+  <p class="sub" style="margin-bottom:14px">Compártelo con el cliente. Solo puede usarse una vez.</p>
+  <div class="caja-enlace">
+    <input id="enlace" value="{{ enlace }}" readonly onclick="this.select()">
+    <button class="btn chico" type="button" id="copiar">Copiar</button>
+  </div>
+  <div class="acciones">
+    <a class="btn sec" target="_blank" rel="noopener"
+       href="https://wa.me/?text={{ ('Hola, registra tu equipo en este enlace: ' ~ enlace) | urlencode }}">Enviar por WhatsApp</a>
+  </div>
+</section>
 <script>
-
-function copiarEnlace() {
-
-    const enlace =
-        document.getElementById("enlace").innerText;
-
-    navigator.clipboard.writeText(enlace);
-
-    alert("Enlace copiado correctamente.");
-
-}
-
+document.getElementById('copiar').onclick=function(){
+  const i=document.getElementById('enlace');i.select();
+  (navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.resolve(document.execCommand('copy')))
+    .then(()=>{this.textContent='¡Copiado!';setTimeout(()=>this.textContent='Copiar',1800)});
+};
 </script>
-
-</body>
-
-</html>
+{% endif %}
+{% endblock %}

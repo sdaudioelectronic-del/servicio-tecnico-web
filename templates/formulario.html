@@ -1,85 +1,68 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orden de Servicio</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
-</head>
+{% extends "base.html" %}
+{% block titulo %}Registro de equipo{% endblock %}
+{% block subtitulo %}Registro del equipo{% endblock %}
+{% block contenido %}
+<ol class="pasos"><li class="on"></li><li></li></ol>
+<h1>Registra tu equipo</h1>
+<p class="sub">Completa los datos para generar tu orden de servicio. Toma menos de 2 minutos.</p>
 
-<body>
+<form action="/guardar" method="POST">
+  <input type="hidden" name="codigo" value="{{ codigo or '' }}">
 
-    <div class="contenedor">
-
-        <h1>Orden de Servicio Técnico</h1>
-
-        <p class="descripcion">
-            Complete los siguientes datos para registrar su equipo.
-        </p>
-
-        <form action="/guardar" method="POST" autocomplete="off">
-
-            <input type="hidden" name="codigo" value="{{ codigo }}">
-
-            <h2>Datos del cliente</h2>
-
-            <label>Nombre completo</label>
-            <input type="text" name="cliente" placeholder="Ingrese su nombre" autocomplete= "off" required
-                oninvalid="this.setCustomValidity('Por favor, ingresa el nombre del cliente.')"
-                oninput="this.setCustomValidity('')">
-
-            <label>Número de teléfono</label>
-
-            <input type="tel" name="telefono" placeholder="Ingrese su numero de teléfono" autocomplete="off" required
-                oninvalid="this.setCustomValidity('Por favor, ingresa el número de teléfono.')"
-                oninput="this.setCustomValidity('')">
-        
-            <label>Dirección</label>
-            <input type="text" name="direccion" placeholder="Ingrese su dirección" autocomplete="off" required
-                oninvalid="this.setCustomValidity('Por favor, ingrese dirección del cliente.')"
-                oninput="this.setCustomValidity('')">
-
-            <label>Tipo de equipo</label>
-            <input type="text" name="equipo" placeholder="Ej: amplificador, cabina" autocomplete="off" required
-                oninvalid="this.setCustomValidity('Por favor, ingrese equipo del cliente.')"
-                oninput="this.setCustomValidity('')">
-
-            <label>Marca</label>
-            <input type="text" name="marca" placeholder="Ingrese la marca" autocomplete="off" required
-                oninvalid="this.setCustomValidity('Por favor, ingrese la marca.')"
-                oninput="this.setCustomValidity('')">
-            
-
-            <label>Modelo</label>
-            <input type="text" name="modelo" placeholder="Ingrese el modelo" autocomplete="off" required
-                oninvalid="this.setCustomValidity('Por favor, ingrese el modelo.')"
-                oninput="this.setCustomValidity('')">
-
-            <label>Falla reportada</label>
-            <textarea name="falla" placeholder="Describa la falla del equipo" autocomplete="off" required></textarea
-                oninvalid="this.setCustomValidity('Por favor, Describa la falla.')"
-                oninput="this.setCustomValidity('')">
-            
-
-
-            <label>Observación</label>
-            <textarea name="observacion" placeholder="Diagnostico y procedimiento" autocomplete="off" required></textarea
-                oninvalid="this.setCustomValidity('Por favor, Describa el diagnostico y procedimiento.')"
-                oninput="this.setCustomValidity('')">
-
-            <label>Accesorios entregados</label>
-            <textarea name="accesorios" placeholder="Ej: Control remoto, cable de corriente, etc." autocomplete="off"></textarea>
-
-
-            <button type="submit">
-            Continuar
-            </button>
-
-           
-
-        </form>
-
+  <section class="card">
+    <h2>Tus datos</h2>
+    <div class="grid">
+      <div class="full">
+        <label for="cliente">Nombre completo</label>
+        <input id="cliente" name="cliente" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" required>
+      </div>
+      <div>
+        <label for="direccion">Dirección</label>
+        <input id="direccion" name="direccion" autocomplete="street-address" required>
+      </div>
     </div>
+  </section>
 
-</body>
-</html>
+  <section class="card">
+    <h2>Equipo</h2>
+    <div class="grid">
+      <div class="full">
+        <label for="equipo">Tipo de equipo</label>
+        <input id="equipo" name="equipo" placeholder="Ej: Amplificador de sonido, equipo de sonido" required>
+      </div>
+      <div>
+        <label for="marca">Marca</label>
+        <input id="marca" name="marca">
+      </div>
+      <div>
+        <label for="modelo">Modelo</label>
+        <input id="modelo" name="modelo">
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Detalles del servicio</h2>
+    <div class="grid">
+      <div class="full">
+        <label for="falla">Falla reportada</label>
+        <textarea id="falla" name="falla" placeholder="¿Qué le pasa al equipo?" required></textarea>
+      </div>
+      <div class="full">
+        <label for="observacion">Observaciones <span class="op">(opcional)</span></label>
+        <textarea id="observacion" name="observacion" placeholder="Golpes, rayones, estado general…"></textarea>
+      </div>
+      <div class="full">
+        <label for="accesorios">Accesorios entregados <span class="op">(opcional)</span></label>
+        <input id="accesorios" name="accesorios" placeholder="Ej: control remoto, cable de poder">
+      </div>
+    </div>
+  </section>
+
+  <button class="btn" type="submit">Continuar a revisión →</button>
+</form>
+{% endblock %}

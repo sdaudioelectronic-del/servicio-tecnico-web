@@ -346,7 +346,7 @@ def firmar(numero_orden):
 
     ruta_logo = os.path.join(
         "static",
-        "logo.png"
+        "Logoo.jpeg"
     )
 
     pdf.drawImage(
@@ -753,15 +753,15 @@ def firmar(numero_orden):
 
 
     # Firma del técnico
-    pdf.drawImage(
-        ImageReader("static/firma_tecnico.png"),
-        320,
-        alto - 795,
-        width=180,
-        height=80,
-        preserveAspectRatio=True,
-        mask="auto"
-    )       
+    #pdf.drawImage(
+    #    ImageReader("static/firma_tecnico.png"),
+    #    320,
+    #    alto - 795,
+    #    width=180,
+    #    height=80,
+    #    preserveAspectRatio=True,
+    #    mask="auto"
+    #)
 
     pdf.setFont("Helvetica", 10)
 
@@ -801,99 +801,10 @@ def firmar(numero_orden):
 
     # Pantalla final
 
-    return f"""
-    <!DOCTYPE html>
-
-    <html lang="es">
-
-    <head>
-
-        <meta charset="UTF-8">
-
-        <meta name="viewport"
-              content="width=device-width, initial-scale=1.0">
-
-        <title>Orden finalizada</title>
-
-        <style>
-
-            body {{
-                font-family: Arial, sans-serif;
-                background: #f2f4f7;
-                margin: 0;
-                padding: 30px;
-            }}
-
-            .contenedor {{
-                max-width: 500px;
-                margin: auto;
-                background: white;
-                padding: 30px;
-                border-radius: 15px;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            }}
-
-            .correcto {{
-                font-size: 50px;
-            }}
-
-            h1 {{
-                margin-bottom: 10px;
-            }}
-
-            .orden {{
-                font-size: 20px;
-                font-weight: bold;
-                margin: 20px;
-            }}
-
-            .boton {{
-                display: block;
-                text-decoration: none;
-                background: #2563eb;
-                color: white;
-                padding: 14px;
-                border-radius: 8px;
-                margin-top: 15px;
-            }}
-
-        </style>
-
-    </head>
-
-    <body>
-
-        <div class="contenedor">
-
-            <div class="correcto">
-                ✓
-            </div>
-
-            <h1>Orden registrada</h1>
-
-            <p>
-                La orden fue registrada y firmada correctamente.
-            </p>
-
-            <div class="orden">
-                Orden #{numero_orden}
-            </div>
-
-            <a class="boton"
-               href="/pdf/{numero_orden}?v={numero_orden}"
-               target="_blank">
-
-                Ver comprobante PDF
-
-            </a>
-
-        </div>
-
-    </body>
-
-    </html>
-    """
+    return render_template(
+        "finalizada.html",
+        numero_orden=numero_orden
+    )
 
 
 @app.route("/pdf/<int:numero_orden>")
@@ -916,7 +827,7 @@ def ver_pdf(numero_orden):
     )
 
 
-    ##
+    
 @app.route("/registro/<codigo>")
 def registro(codigo):
 
@@ -1011,4 +922,4 @@ if __name__ == "__main__":
     host="0.0.0.0",
     port=5000,
     debug=True
-    )
+    )    

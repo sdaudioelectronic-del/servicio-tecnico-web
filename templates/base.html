@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block titulo %}Servicio técnico{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <img class="logo" src="{{ url_for('static', filename='Logoo.jpeg') }}" alt="" onerror="this.style.display='none'">
+      <div class="marca">Servicio técnico<small>{% block subtitulo %}Orden de servicio{% endblock %}</small></div>
+    </div>
+  </header>
+  <main class="pagina">
+    {% block contenido %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

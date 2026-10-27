@@ -1,240 +1,105 @@
-<!DOCTYPE html>
-<html lang="es">
+{% extends "base.html" %}
+{% block titulo %}Revisión y firma · Orden #{{ numero_orden }}{% endblock %}
+{% block subtitulo %}Revisión y firma{% endblock %}
+{% block contenido %}
+<ol class="pasos"><li class="on"></li><li class="on"></li></ol>
+<span class="insignia">Orden #{{ numero_orden }}</span>
+<h1>Revisa y firma</h1>
+<p class="sub">Verifica que los datos sean correctos y firma para recibir tu comprobante.</p>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<section class="card">
+  <h2>Cliente</h2>
+  <dl class="resumen">
+    <div><dt>Nombre</dt><dd>{{ cliente }}</dd></div>
+    <div><dt>Teléfono</dt><dd>{{ telefono }}</dd></div>
+    <div style="grid-column:1/-1"><dt>Dirección</dt><dd>{{ direccion }}</dd></div>
+  </dl>
+</section>
 
-    <title>Firma - Orden #{{ numero_orden }}</title>
+<section class="card">
+  <h2>Equipo y falla</h2>
+  <dl class="resumen">
+    <div><dt>Equipo</dt><dd>{{ equipo }}</dd></div>
+    <div><dt>Marca / Modelo</dt><dd>{{ marca or '—' }} {{ modelo }}</dd></div>
+    <div style="grid-column:1/-1"><dt>Falla reportada</dt><dd>{{ falla or '—' }}</dd></div>
+    <div style="grid-column:1/-1"><dt>Observaciones</dt><dd>{{ observacion or 'Sin observaciones' }}</dd></div>
+    <div style="grid-column:1/-1"><dt>Accesorios</dt><dd>{{ accesorios or 'Sin accesorios' }}</dd></div>
+  </dl>
+</section>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='estilo.css') }}">
-</head>
-
-<body>
-
-<div class="contenedor">
-
-    <h1>Firma del cliente</h1>
-
-    <p class="descripcion">
-        Revise la información de la orden y firme dentro del recuadro.
-    </p>
-
-    <div class="orden">
-
-        <h2>Orden #{{ numero_orden }}</h2>
-
-        <p><strong>Cliente:</strong> {{ cliente }}</p>
-        <p><strong>Teléfono:</strong> {{ telefono }}</p>
-        <p><strong>Equipo:</strong> {{ equipo }}</p>
-        <p><strong>Marca:</strong> {{ marca }}</p>
-        <p><strong>Modelo:</strong> {{ modelo }}</p>
-
-        <p>
-            <strong>Falla reportada:</strong><br>
-            {{ falla }}
-        </p>
-
-        <p>
-            <strong>Observación:</strong><br>
-            {{ observacion }}
-        </p>
-
-
-
-
-        <p>
-            <strong>Accesorios:</strong><br>
-            {{ accesorios }}
-        </p>
-
+<form id="form-firma" action="/firmar/{{ numero_orden }}" method="POST">
+  <section class="card">
+    <h2>Costos y garantía</h2>
+    <div class="grid">
+      <div>
+        <label for="mano_obra">Mano de obra ($)</label>
+        <input id="mano_obra" name="mano_obra" type="number" min="0" step="any" inputmode="decimal" value="0">
+      </div>
+      <div>
+        <label for="repuestos">Repuestos ($)</label>
+        <input id="repuestos" name="repuestos" type="number" min="0" step="any" inputmode="decimal" value="0">
+      </div>
+      <div class="full">
+        <label for="garantia">Garantía (meses)</label>
+        <input id="garantia" name="garantia" type="number" min="0" step="1" inputmode="numeric" value="0">
+      </div>
     </div>
+    <div class="total"><span>Total estimado</span><strong id="total">$ 0</strong></div>
+  </section>
 
-    <hr>
-
-    <h3>DESGLOSE DE COSTOS</h3>
-
-    <div class="campo">
-        <label for="mano_obra">Mano de obra</label>
-
-        <input
-            type="number"
-            id="mano_obra"
-            name="mano_obra"
-            min="0"
-            step="100"
-            value="0"
-            placeholder="Ingrese el valor"
-        >
+  <section class="card">
+    <h2>Firma del cliente</h2>
+    <div class="firma-caja" id="caja">
+      <canvas id="lienzo"></canvas>
+      <div class="firma-ayuda">Firma aquí con el dedo o el mouse</div>
     </div>
-
-    <div class="campo">
-        <label for="repuestos">Repuestos</label>
-
-        <input
-            type="number"
-            id="repuestos"
-            name="repuestos"
-            min="0"
-            step="100"
-            value="0"
-            placeholder="Ingrese el valor"
-        >
+    <div class="firma-acciones">
+      <span>Al firmar aceptas las condiciones del servicio.</span>
+      <button type="button" class="link" id="borrar">Borrar</button>
     </div>
+    <div class="error" id="error">Por favor firma antes de continuar.</div>
+    <input type="hidden" name="firma" id="firma">
+  </section>
 
-    <label>Garantía del servicio (meses)</label>
-        <input
-            type="number"
-            name="garantia"
-            min="0"
-            placeholder="Ej: 3"
-        >
+  <button class="btn" type="submit">Firmar y generar comprobante</button>
+</form>
+{% endblock %}
 
-    <h2>Firma</h2>
-
-    <div class="firma-contenedor">
-        <canvas id="canvas-firma"></canvas>
-    </div>
-
-    <button type="button" onclick="limpiarFirma()">
-        Limpiar firma
-    </button>
-
-    <button type="button" onclick="guardarFirma()">
-        Firmar y finalizar
-    </button>
-
-    <form id="form-firma"
-            action="/firmar/{{ numero_orden }}"
-            method="POST">
-
-        <input type="hidden"
-           name="firma"
-           id="firma">
-
-        <input type="hidden"
-            name="mano_obra"
-            id="form-mano-obra">
-
-        <input type="hidden"
-           name="repuestos"
-           id="form-repuestos">
-
-        <input type="hidden"
-            name="garantia"
-            id="form-garantia">
-
-    </form>
-
-</div>
-
+{% block scripts %}
 <script>
+(function(){
+  const lienzo=document.getElementById('lienzo'), caja=document.getElementById('caja');
+  const ctx=lienzo.getContext('2d'); let dibujando=false, hayTrazo=false;
 
-const canvas = document.getElementById("canvas-firma");
-const ctx = canvas.getContext("2d");
+  let anchoPrev=0;
+  function ajustar(){
+    const w=lienzo.clientWidth, h=lienzo.clientHeight;
+    if(w===anchoPrev) return;               // ignora cambios solo de alto (barra del navegador)
+    const previo=hayTrazo?lienzo.toDataURL():null, viejoW=anchoPrev;
+    const r=window.devicePixelRatio||1;
+    lienzo.width=w*r; lienzo.height=h*r; ctx.setTransform(r,0,0,r,0,0);
+    ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#0f172a';
+    anchoPrev=w;
+    if(previo){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,w,h);img.src=previo}
+  }
+  ajustar(); window.addEventListener('resize',ajustar);
 
-canvas.width = canvas.offsetWidth;
-canvas.height = 250;
+  function pos(e){const b=lienzo.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}}
+  lienzo.addEventListener('pointerdown',e=>{dibujando=true;lienzo.setPointerCapture(e.pointerId);
+    const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+.01,p.y);ctx.stroke();
+    hayTrazo=true;caja.classList.add('firmada');document.getElementById('error').style.display='none'});
+  lienzo.addEventListener('pointermove',e=>{if(!dibujando)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+  ['pointerup','pointercancel'].forEach(t=>lienzo.addEventListener(t,()=>dibujando=false));
+  document.getElementById('borrar').onclick=()=>{ctx.clearRect(0,0,lienzo.width,lienzo.height);hayTrazo=false;caja.classList.remove('firmada')};
 
-let dibujando = false;
+  document.getElementById('form-firma').addEventListener('submit',e=>{
+    if(!hayTrazo){e.preventDefault();document.getElementById('error').style.display='block';return}
+    document.getElementById('firma').value=lienzo.toDataURL('image/png');
+  });
 
-function obtenerPosicion(e) {
-
-    const rect = canvas.getBoundingClientRect();
-
-    if (e.touches) {
-
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
-
-    }
-
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
-}
-
-
-function comenzar(e) {
-
-    e.preventDefault();
-
-    dibujando = true;
-
-    const posicion = obtenerPosicion(e);
-
-    ctx.beginPath();
-
-    ctx.moveTo(posicion.x, posicion.y);
-}
-
-
-function dibujar(e) {
-
-    if (!dibujando) return;
-
-    e.preventDefault();
-
-    const posicion = obtenerPosicion(e);
-
-    ctx.lineTo(posicion.x, posicion.y);
-
-    ctx.stroke();
-}
-
-
-function terminar() {
-
-    dibujando = false;
-
-    ctx.closePath();
-}
-
-
-canvas.addEventListener("mousedown", comenzar);
-canvas.addEventListener("mousemove", dibujar);
-canvas.addEventListener("mouseup", terminar);
-
-canvas.addEventListener("touchstart", comenzar);
-canvas.addEventListener("touchmove", dibujar);
-canvas.addEventListener("touchend", terminar);
-
-
-function limpiarFirma() {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-}
-
-
-function guardarFirma() {
-
-    const imagen = canvas.toDataURL("image/png");
-
-    document.getElementById("firma").value = imagen;
-
-    document.getElementById("form-mano-obra").value =
-        document.getElementById("mano_obra").value;
-
-    document.getElementById("form-repuestos").value =
-        document.getElementById("repuestos").value;
-
-    document.getElementById("form-garantia").value =
-        document.querySelector('[name="garantia"]').value;
-
-    document.getElementById("form-firma").submit();
-}
-
+  const mo=document.getElementById('mano_obra'), rp=document.getElementById('repuestos'), tt=document.getElementById('total');
+  function total(){const t=(parseFloat(mo.value)||0)+(parseFloat(rp.value)||0);tt.textContent='$ '+t.toLocaleString('es-CO')}
+  mo.addEventListener('input',total); rp.addEventListener('input',total); total();
+})();
 </script>
-
-</body>
-
-</html> 
+{% endblock %}
