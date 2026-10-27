@@ -346,7 +346,7 @@ def firmar(numero_orden):
 
     ruta_logo = os.path.join(
         "static",
-        "Logoo.jpeg"
+        "logo.png"
     )
 
     pdf.drawImage(
@@ -735,14 +735,14 @@ def firmar(numero_orden):
     
 
 
-# =========================================================
-# FIRMA
-# =========================================================
+
+    # =========================================================
+    # FIRMA
+    # =========================================================
 
     
-
     pdf.drawImage(
-     ImageReader(ruta_firma),
+        ImageReader(ruta_firma),
         5,
         alto - 785,
         width=220,
@@ -751,17 +751,17 @@ def firmar(numero_orden):
         mask="auto"
     )
 
-
     # Firma del técnico
-    #pdf.drawImage(
-    #    ImageReader("static/firma_tecnico.png"),
-    #    320,
-    #    alto - 795,
-    #    width=180,
-    #    height=80,
-    #    preserveAspectRatio=True,
-    #    mask="auto"
-    #)
+    pdf.drawImage(
+        ImageReader("static/firma_tecnico.png"),
+        320,
+        alto - 795,
+        width=180,
+        height=80,
+        preserveAspectRatio=True,
+        mask="auto"
+    )
+
 
     pdf.setFont("Helvetica", 10)
 
@@ -769,7 +769,7 @@ def firmar(numero_orden):
         90,
         alto - 790,
         "Firma del cliente"
-    )   
+    )
 
     pdf.drawString(
         370,
@@ -777,10 +777,9 @@ def firmar(numero_orden):
         "Firma del técnico"
     )
 
-
-# =========================================================
-# PIE DE PÁGINA
-# =========================================================
+    # =========================================================
+    # PIE DE PÁGINA
+    # =========================================================
 
     pdf.line(
         40,
